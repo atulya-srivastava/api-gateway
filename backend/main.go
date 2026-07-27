@@ -1,7 +1,6 @@
 package main
 
 import (
-	"atulya/api-gateway/proxy"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,14 +18,10 @@ func usersHandler(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintln(w,"Hello from user service")
 }
 
-func main(){
+func main() {
+	http.HandleFunc("/users", usersHandler)
 
-	userProxy := proxy.NewProxy("http://localhost/8001")
-
-	http.Handle("/users", userProxy)
-
-	log.Println("Backend running at port 8081")
-
-	log.Fatal(http.ListenAndServe(":8081",nil))
+	log.Println("Backend running on :8081")
+	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
