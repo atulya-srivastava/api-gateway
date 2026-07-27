@@ -1,3 +1,3 @@
-module github.com/atulya-srivastava/api-gateway
+module atulya/api-gateway
 
 go 1.26.5
