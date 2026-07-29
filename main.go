@@ -1,11 +1,12 @@
-	package main
+package main
 
-	import (
-		"atulya/api-gateway/proxy"
-		"log"
-		"net/http"
-		"atulya/api-gateway/services"
-	)
+import (
+	"atulya/api-gateway/middleware"
+	"atulya/api-gateway/proxy"
+	"atulya/api-gateway/services"
+	"log"
+	"net/http"
+)
 
 	func main() {
 
@@ -21,7 +22,7 @@
 
 			urlProxy := proxy.NewProxy(targetUrl)
 
-			http.Handle(route,urlProxy)
+			http.Handle(route,middleware.Logging(urlProxy))
 		}
 
 		log.Println("Gateway running on :8080")
