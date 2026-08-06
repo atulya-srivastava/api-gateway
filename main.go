@@ -1,8 +1,8 @@
 package main
 
 import (
+	loadbalencer "atulya/api-gateway/loadbalancer"
 	"atulya/api-gateway/middleware"
-	"atulya/api-gateway/proxy"
 	"atulya/api-gateway/services"
 	"log"
 	"net/http"
@@ -18,14 +18,21 @@ import (
 		// http.Handle("/products", productProxy)
 		// http.Handle("/orders",orderProxy)
 
-		for route, targetUrl := range services.Routes{
+		for route, targetUrls := range services.Routes{
 
-			urlProxy := proxy.NewProxy(targetUrl)
+			lb := loadbalencer.New(targetUrls)
 
-			http.Handle(route,middleware.Logging(urlProxy))
-		}
-
-		log.Println("Gateway running on :8080")
-
-		log.Fatal(http.ListenAndServe(":8080", nil))
+			http.Handle(
+				route,
+				middleware.Authentication(
+					middleware.RateLimit(
+					middleware.Logging(lb),
+				),
+			),
+		)
+		
 	}
+	
+	log.Println("Gateway running on :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}

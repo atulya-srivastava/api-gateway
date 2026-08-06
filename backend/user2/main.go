@@ -15,13 +15,13 @@ func usersHandler(w http.ResponseWriter, r *http.Request){
 	log.Println("Host:", r.Host)
 	log.Println("Remote Address:", r.RemoteAddr)
 
-	fmt.Fprintln(w,"Hello from user service 1")
+	fmt.Fprintln(w,"Hello from user service 2")
 }
 
 func main() {
 	http.HandleFunc("/users", usersHandler)
 
-	log.Println("Backend running on :8081")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	log.Println("Backend running on :8084")
+	log.Fatal(http.ListenAndServe(":8084", nil))
 }
 
