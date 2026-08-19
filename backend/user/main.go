@@ -18,9 +18,15 @@ func usersHandler(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintln(w,"Hello from user service 1")
 }
 
+func healthHandler(w http.ResponseWriter, r * http.Request){
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "ok the server is responding")
+}
+
 func main() {
 	http.HandleFunc("/users", usersHandler)
-
+	http.HandleFunc("/health", healthHandler)
+	
 	log.Println("Backend running on :8081")
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
