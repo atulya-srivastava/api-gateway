@@ -3,6 +3,7 @@ package main
 import (
 	loadbalencer "atulya/api-gateway/loadbalancer"
 	"atulya/api-gateway/middleware"
+	"atulya/api-gateway/healthcheck"
 	"atulya/api-gateway/services"
 	"log"
 	"net/http"
@@ -19,6 +20,22 @@ import (
 		// http.Handle("/orders",orderProxy)
 
 		for route, targetUrls := range services.Routes{
+
+			healthyServers := []string{}
+
+			for _, server := range targetUrls {
+
+				// Check whether this backend is alive
+				if healthcheck.IsHealthy(server) {
+					healthyServers = append(healthyServers, server)
+				}
+			}
+
+			// If no backend is healthy, skip this route
+			if len(healthyServers) == 0 {
+				log.Println("No healthy servers for", route)
+				continue
+			}
 
 			lb := loadbalencer.New(targetUrls)
 
