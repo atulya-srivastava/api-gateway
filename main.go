@@ -1,13 +1,18 @@
 package main
 
 import (
+	"atulya/api-gateway/healthcheck"
 	loadbalencer "atulya/api-gateway/loadbalancer"
 	"atulya/api-gateway/middleware"
-	"atulya/api-gateway/healthcheck"
 	"atulya/api-gateway/services"
 	"log"
 	"net/http"
 )
+
+type Result struct{
+	serverName string
+	healthy bool
+}
 
 	func main() {
 
@@ -23,11 +28,26 @@ import (
 
 			healthyServers := []string{}
 
+			results := make(chan Result,len(targetUrls))
+
 			for _, server := range targetUrls {
 
-				// Check whether this backend is alive
-				if healthcheck.IsHealthy(server) {
-					healthyServers = append(healthyServers, server)
+				go func(server string){
+					healthy := healthcheck.IsHealthy(server)
+
+					results <- Result {
+						serverName: server,
+						healthy: healthy,
+					}
+					
+				}(server)
+				
+			}
+
+			for i:=0;i<len(targetUrls);i++{
+				result := <- results
+				if result.healthy {
+					healthyServers = append(healthyServers,result.serverName)
 				}
 			}
 
@@ -37,7 +57,7 @@ import (
 				continue
 			}
 
-			lb := loadbalencer.New(targetUrls)
+			lb := loadbalencer.New(healthyServers)
 
 			http.Handle(
 				route,
