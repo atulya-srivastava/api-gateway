@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -11,10 +12,13 @@ type Client struct {
 	LastAttempt time.Time
 }
 
-var clients = make(map[string]Client)
+var (
+	clients = make(map[string]Client)
+	mu      sync.Mutex
+)
 
 const (
-	MaxRequests = 5
+	MaxRequests = 10000
 	Window      = 30 * time.Second
 )
 
@@ -24,6 +28,7 @@ func RateLimit(next http.Handler) http.Handler {
 
 		ip := strings.Split(r.RemoteAddr, ":")[0]
 
+		mu.Lock()
 		client := clients[ip]
 
 		if time.Since(client.LastAttempt) > Window {
@@ -32,10 +37,11 @@ func RateLimit(next http.Handler) http.Handler {
 		}
 
 		client.Attempts++
-
 		clients[ip] = client
+		attempts := client.Attempts
+		mu.Unlock()
 
-		if client.Attempts > MaxRequests {
+		if attempts > MaxRequests {
 			http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
 			return
 		}
