@@ -1,4 +1,4 @@
-package loadbalencer
+package loadbalancer
 
 import (
 	"atulya/api-gateway/proxy"
@@ -18,9 +18,23 @@ func New(servers []string) *LoadBalancer{
 	}
 }
 
+func (lb *LoadBalancer) UpdateServers(servers []string){
+	lb.Mutex.Lock()
+	defer lb.Mutex.Unlock()
+
+	lb.Servers = servers
+	lb.Index = 0
+}
+
 func (lb *LoadBalancer) ServeHTTP(w http.ResponseWriter, r *http.Request){
 
 	lb.Mutex.Lock()
+
+	if len(lb.Servers) == 0 {
+		http.Error(w, "No healthy servers available", http.StatusServiceUnavailable)
+		lb.Mutex.Unlock()
+		return
+	}
 
 	server:= lb.Servers[lb.Index];
 

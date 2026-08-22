@@ -2,7 +2,7 @@ package main
 
 import (
 	"atulya/api-gateway/healthcheck"
-	loadbalencer "atulya/api-gateway/loadbalancer"
+	"atulya/api-gateway/loadbalancer"
 	"atulya/api-gateway/middleware"
 	"atulya/api-gateway/services"
 	"log"
@@ -26,30 +26,7 @@ type Result struct{
 
 		for route, targetUrls := range services.Routes{
 
-			healthyServers := []string{}
-
-			results := make(chan Result,len(targetUrls))
-
-			for _, server := range targetUrls {
-
-				go func(server string){
-					healthy := healthcheck.IsHealthy(server)
-
-					results <- Result {
-						serverName: server,
-						healthy: healthy,
-					}
-					
-				}(server)
-				
-			}
-
-			for i:=0;i<len(targetUrls);i++{
-				result := <- results
-				if result.healthy {
-					healthyServers = append(healthyServers,result.serverName)
-				}
-			}
+			healthyServers := healthcheck.CheckAll(targetUrls)
 
 			// If no backend is healthy, skip this route
 			if len(healthyServers) == 0 {
@@ -57,7 +34,7 @@ type Result struct{
 				continue
 			}
 
-			lb := loadbalencer.New(healthyServers)
+			lb := loadbalancer.New(healthyServers)
 
 			http.Handle(
 				route,
@@ -68,6 +45,7 @@ type Result struct{
 			),
 		)
 		
+		go healthcheck.StartMonitor(targetUrls,lb)
 	}
 	
 	log.Println("Gateway running on :8080")
