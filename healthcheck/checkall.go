@@ -1,5 +1,7 @@
 package healthcheck
 
+import "log"
+
 type Result struct {
 	ServerName string
 	Healthy    bool
@@ -17,6 +19,13 @@ func CheckAll(servers []string) []string {
 			// Recover from an unexpected panic.
 			defer func() {
 				if r := recover(); r != nil {
+					
+					log.Printf(
+						"Health check panic for %s:%v",
+						server,
+						r,
+					)
+					
 					results <- Result{
 						ServerName: server,
 						Healthy:    false,
