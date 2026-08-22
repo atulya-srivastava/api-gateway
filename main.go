@@ -39,7 +39,7 @@ import (
 			),
 		)
 		
-		go healthcheck.StartMonitor(targetUrls,lb.UpdateServers)
+		go healthcheck.StartMonitor(route,targetUrls,lb.UpdateServers)
 	}
 	
 	log.Println("Gateway running on :8080")

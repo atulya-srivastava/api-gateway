@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func StartMonitor(servers [] string,update func([]string)){
+func StartMonitor(route string, servers []string, update func([]string)){
 
 	ticker := time.NewTicker(5* time.Second)
 
@@ -18,6 +18,6 @@ func StartMonitor(servers [] string,update func([]string)){
 
 		update(healthyServers)
 
-		log.Println("Healthy servers:", healthyServers)
+		log.Println("Health chek:",route, healthyServers)
 	}
 }
