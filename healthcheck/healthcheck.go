@@ -5,11 +5,11 @@ import (
 	"time"
 )
 
-func IsHealthy(server string) bool{
+var client =http.Client{
+	Timeout: 2* time.Second,
+}
 
-	client :=http.Client{
-		Timeout: 2* time.Second,
-	}
+func IsHealthy(server string) bool{
 
 	resp,err := client.Get(server +"/health");
 
