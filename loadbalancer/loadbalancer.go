@@ -6,31 +6,33 @@ import (
 	"sync"
 )
 
-type LoadBalancer struct{
-	servers[] string
-	index int
-	mu sync.Mutex
+type LoadBalancer struct {
+	servers []string
+	index   int
+	mu      sync.Mutex
+	proxies map[string]http.Handler
 }
 
-func New(servers []string) *LoadBalancer{
+func New(servers []string) *LoadBalancer {
 	return &LoadBalancer{
 		servers: servers,
+		proxies: make(map[string]http.Handler),
 	}
 }
 
-func (lb *LoadBalancer) UpdateServers(servers []string){
+func (lb *LoadBalancer) UpdateServers(servers []string) {
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
 
 	lb.servers = servers
 
 	// Keep the index valid after the server list changes.
-    if len(lb.servers) == 0 {
-        lb.index = 0
-        return
-    }
+	if len(lb.servers) == 0 {
+		lb.index = 0
+		return
+	}
 
-    lb.index = lb.index % len(lb.servers)
+	lb.index = lb.index % len(lb.servers)
 }
 
 
@@ -44,12 +46,16 @@ func (lb *LoadBalancer) ServeHTTP(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	server:= lb.servers[lb.index];
+	targetServer := lb.servers[lb.index]
+	lb.index = (lb.index + 1) % len(lb.servers)
 
-	lb.index = (lb.index + 1) % len(lb.servers);
+	targetProxy, exists := lb.proxies[targetServer]
+	if !exists {
+		targetProxy = proxy.NewProxy(targetServer)
+		lb.proxies[targetServer] = targetProxy
+	}
 
 	lb.mu.Unlock()
 
-	proxy.NewProxy(server).ServeHTTP(w,r)
-
+	targetProxy.ServeHTTP(w, r)
 }
