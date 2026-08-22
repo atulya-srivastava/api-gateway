@@ -3,10 +3,9 @@ package healthcheck
 import (
 	"log"
 	"time"
-	"atulya/api-gateway/loadbalancer"
 )
 
-func StartMonitor(servers [] string,lb *loadbalancer.LoadBalancer) {
+func StartMonitor(servers [] string,update func([]string)){
 
 	ticker := time.NewTicker(5* time.Second)
 
@@ -17,7 +16,7 @@ func StartMonitor(servers [] string,lb *loadbalancer.LoadBalancer) {
 		// Check all backend servers concurrently.
 		healthyServers := CheckAll(servers)
 
-		lb.UpdateServers(healthyServers)
+		update(healthyServers)
 
 		log.Println("Healthy servers:", healthyServers)
 	}

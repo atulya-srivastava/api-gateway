@@ -45,7 +45,7 @@ type Result struct{
 			),
 		)
 		
-		go healthcheck.StartMonitor(targetUrls,lb)
+		go healthcheck.StartMonitor(targetUrls,lb.UpdateServers)
 	}
 	
 	log.Println("Gateway running on :8080")
