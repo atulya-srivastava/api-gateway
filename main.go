@@ -9,11 +9,6 @@ import (
 	"net/http"
 )
 
-type Result struct{
-	serverName string
-	healthy bool
-}
-
 	func main() {
 
 		// userProxy := proxy.NewProxy("http://localhost:8081")
@@ -31,7 +26,6 @@ type Result struct{
 			// If no backend is healthy, skip this route
 			if len(healthyServers) == 0 {
 				log.Println("No healthy servers for", route)
-				continue
 			}
 
 			lb := loadbalancer.New(healthyServers)
