@@ -7,40 +7,48 @@ import (
 )
 
 type LoadBalancer struct{
-	Servers[] string
-	Index int
-	Mutex sync.Mutex
+	servers[] string
+	index int
+	mu sync.Mutex
 }
 
 func New(servers []string) *LoadBalancer{
 	return &LoadBalancer{
-		Servers: servers,
+		servers: servers,
 	}
 }
 
 func (lb *LoadBalancer) UpdateServers(servers []string){
-	lb.Mutex.Lock()
-	defer lb.Mutex.Unlock()
+	lb.mu.Lock()
+	defer lb.mu.Unlock()
 
-	lb.Servers = servers
-	lb.Index = 0
+	lb.servers = servers
+
+	// Keep the index valid after the server list changes.
+    if len(lb.servers) == 0 {
+        lb.index = 0
+        return
+    }
+
+    lb.index = lb.index % len(lb.servers)
 }
+
 
 func (lb *LoadBalancer) ServeHTTP(w http.ResponseWriter, r *http.Request){
 
-	lb.Mutex.Lock()
+	lb.mu.Lock()
 
-	if len(lb.Servers) == 0 {
+	if len(lb.servers) == 0 {
 		http.Error(w, "No healthy servers available", http.StatusServiceUnavailable)
-		lb.Mutex.Unlock()
+		lb.mu.Unlock()
 		return
 	}
 
-	server:= lb.Servers[lb.Index];
+	server:= lb.servers[lb.index];
 
-	lb.Index = (lb.Index + 1) % len(lb.Servers);
+	lb.index = (lb.index + 1) % len(lb.servers);
 
-	lb.Mutex.Unlock()
+	lb.mu.Unlock()
 
 	proxy.NewProxy(server).ServeHTTP(w,r)
 
