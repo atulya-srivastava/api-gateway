@@ -20,7 +20,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request){
 
 func healthHandler(w http.ResponseWriter, r * http.Request){
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "ok the server is responding")
+	fmt.Fprintln(w, "ok the server user is responding")
 }
 
 func main() {
